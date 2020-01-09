@@ -1,0 +1,84 @@
+set daemon 300
+set logfile /var/log/monit.log
+
+set httpd port 2812 and
+use address localhost
+allow localhost
+allow admin:monit
+#Mail settings
+set mail-format {
+  from: org.com
+  subject: PROD | $EVENT | $SERVICE
+  message: $EVENT Service $SERVICE
+                Date:        $DATE
+                Action:      $ACTION
+                Description: $DESCRIPTION
+}
+set mailserver secure.emailsrvr.com port 587
+  username username password
+  using TLSV1
+set alert engro@acit.com
+check process enzen with pidfile /home/enzen/pid/gunicorn.pid
+	alert support@org.com with reminder on 1 cycle
+	if does not exist then alert
+check process farmer_scouting with pidfile /home/enzen/pid/gunicorn_scouting.pid
+	alert support@org.com with reminder on 1 cycle
+	if does not exist then alert
+check process farmer_trecking with pidfile /home/enzen/pid/gunicorn_tracking.pid
+	alert support@org.com with reminder on 1 cycle
+	if does not exist then alert
+check process farmer_reporting with pidfile /home/enzen/pid/gunicorn_reporting.pid
+	alert support@org.com with reminder on 1 cycle
+	if does not exist then alert
+check host front_end with address "engro.acit.com"
+       alert support@org.com with reminder on 1 cycle
+        if failed
+                port 443
+                protocol HTTPS
+                request "/"
+                status = 200
+        then alert
+
+
+
+check host scouting_service_check with address "org.com"
+	alert support@org.com with reminder on 1 cycle
+	if failed
+		port 443
+		protocol HTTPS
+		request "/api/scouting/survey/"
+		status = 403
+	then alert
+check host enzen_service_check with address "org.com"
+	alert support@org.com with reminder on 1 cycle
+	if failed
+                port 443
+                protocol HTTPS
+                request "/api/read/users"
+                status = 403
+        then alert
+check system localhost
+        alert support@org.com with reminder on 1 cycle
+	if memory usage > 85% then alert
+	if cpu usage (system) > 80% then alert
+check filesystem var with path /var
+	alert support@org.com with reminder on 1 cycle
+	if SPACE usage > 80% then alert
+check device dev with path /dev
+	alert support@org.com with reminder on 1 cycle
+        if SPACE usage > 80% then alert
+check device run with path /run
+	alert support@org.com with reminder on 1 cycle
+	if SPACE usage > 80% then alert
+check device sys with path /sys
+	alert support@org.com with reminder on 1 cycle
+	if SPACE usage > 80% then alert
+check program queue_service with path /home/ubuntu/queue_services_length_check/que_service.sh
+	alert support@org.com with reminder on 1 cycle
+	if status != 0 then alert
+check program email_service with path /home/ubuntu/queue_services_length_check/email_service.sh
+	alert support@org.com with reminder on 1 cycle
+	if status != 0 then alert
+check file check_cron with path /tmp/check_cron
+    alert support@org.com with reminder on 1 cycle
+    if timestamp > 24 hours then alert
